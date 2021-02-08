@@ -10,7 +10,7 @@ from torch import nn
 
 class BertV0(BertPreTrainedModel):
     """
-    BertV0在原生BERT的基础上，层归一化全部采用的是不带参数，不带统计特性的模块，不带最终的池化层
+    BertV0在原生BERT的基础上，层归一化都不带仿射，模型不带最终的池化层
     """
 
     def __init__(self, config, *inputs, **kwargs):
