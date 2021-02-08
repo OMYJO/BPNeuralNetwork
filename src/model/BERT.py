@@ -5,7 +5,6 @@ from transformers.modeling_bert import BertEncoder
 from transformers.modeling_bert import BertLayerNorm
 from transformers import BertConfig
 import torch
-from torch.nn import BatchNorm1d
 
 
 class BertV0(BertPreTrainedModel):
