@@ -5,7 +5,7 @@ from transformers.modeling_bert import BertEncoder
 from transformers.modeling_bert import BertLayerNorm
 from transformers import BertConfig
 import torch
-
+from torch import nn
 
 class BertV0(BertPreTrainedModel):
     """
@@ -21,16 +21,23 @@ class BertV0(BertPreTrainedModel):
                                                   elementwise_affine=False)
 
         self.encoder = BertEncoder(config)
-        for layer in self.encoder.layer:
-            layer.attention.LayerNorm = BertLayerNorm(config.hidden_size, eps=config.layer_norm_eps,
-                                                      elementwise_affine=False)
-            if layer.is_decoder:
-                layer.crossattention.LayerNorm = BertLayerNorm(config.hidden_size, eps=config.layer_norm_eps,
-                                                               elementwise_affine=False)
-            layer.output.LayerNorm = BertLayerNorm(config.hidden_size, eps=config.layer_norm_eps,
-                                                   elementwise_affine=False)
+        for i, layer_module in enumerate(self.encoder.layer):
+            layer_module.attention.output.LayerNorm = BertLayerNorm(config.hidden_size, eps=config.layer_norm_eps,
+                                                             elementwise_affine=False)
+            if layer_module.is_decoder:
+                layer_module.crossattention.output.LayerNorm = BertLayerNorm(config.hidden_size, eps=config.layer_norm_eps,
+                                                                      elementwise_affine=False)
+            layer_module.output.LayerNorm = BertLayerNorm(config.hidden_size, eps=config.layer_norm_eps,
+                                                          elementwise_affine=False)
 
-        self.init_weights()
+    def _init_weights(self, module):
+        if isinstance(module, (nn.Linear, nn.Embedding)):
+            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
+        elif isinstance(module, BertLayerNorm) and module.elementwise_affine:
+            module.bias.data.zero_()
+            module.weight.data.fill_(1.0)
+        if isinstance(module, nn.Linear) and module.bias is not None:
+            module.bias.data.zero_()
 
     def forward(self, input_ids=None, attention_mask=None, token_type_ids=None, position_ids=None,
                 head_mask=None, inputs_embeds=None, encoder_hidden_states=None, encoder_attention_mask=None):
