@@ -7,6 +7,7 @@ from transformers import BertConfig
 import torch
 from torch import nn
 
+
 class BertV0(BertPreTrainedModel):
     """
     BertV0在原生BERT的基础上，层归一化全部采用的是不带参数，不带统计特性的模块，不带最终的池化层
@@ -23,12 +24,15 @@ class BertV0(BertPreTrainedModel):
         self.encoder = BertEncoder(config)
         for i, layer_module in enumerate(self.encoder.layer):
             layer_module.attention.output.LayerNorm = BertLayerNorm(config.hidden_size, eps=config.layer_norm_eps,
-                                                             elementwise_affine=False)
+                                                                    elementwise_affine=False)
             if layer_module.is_decoder:
-                layer_module.crossattention.output.LayerNorm = BertLayerNorm(config.hidden_size, eps=config.layer_norm_eps,
-                                                                      elementwise_affine=False)
+                layer_module.crossattention.output.LayerNorm = BertLayerNorm(config.hidden_size,
+                                                                             eps=config.layer_norm_eps,
+                                                                             elementwise_affine=False)
             layer_module.output.LayerNorm = BertLayerNorm(config.hidden_size, eps=config.layer_norm_eps,
                                                           elementwise_affine=False)
+
+        self.init_weights()
 
     def _init_weights(self, module):
         if isinstance(module, (nn.Linear, nn.Embedding)):
@@ -156,5 +160,5 @@ class BertV0(BertPreTrainedModel):
 
 if __name__ == '__main__':
     config = BertConfig(hidden_size=16, max_position_embeddings=32, type_vocab_size=8, vocab_size=256,
-                        num_attention_heads=16, intermediate_size=16)
+                        num_attention_heads=4, intermediate_size=32)
     _ = BertV0(config)
