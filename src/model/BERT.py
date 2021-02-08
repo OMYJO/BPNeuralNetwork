@@ -5,6 +5,7 @@ from transformers.modeling_bert import BertEncoder
 from transformers.modeling_bert import BertLayerNorm
 import torch
 
+
 class BertV0(BertPreTrainedModel):
     """
     BertV0在原生BERT的基础上，层归一化全部采用的是不带参数，不带统计特性的模块，不带最终的池化层
@@ -75,12 +76,14 @@ class BertV0(BertPreTrainedModel):
                 batch_size, seq_length = input_shape
                 seq_ids = torch.arange(seq_length, device=device)
                 causal_mask = seq_ids[None, None, :].repeat(batch_size, seq_length, 1) <= seq_ids[None, :, None]
-                causal_mask = causal_mask.to(torch.long)  # not converting to long will cause errors with pytorch version < 1.3
+                causal_mask = causal_mask.to(
+                    torch.long)  # not converting to long will cause errors with pytorch version < 1.3
                 extended_attention_mask = causal_mask[:, None, :, :] * attention_mask[:, None, None, :]
             else:
                 extended_attention_mask = attention_mask[:, None, None, :]
         else:
-            raise ValueError("Wrong shape for input_ids (shape {}) or attention_mask (shape {})".format(input_shape, attention_mask.shape))
+            raise ValueError("Wrong shape for input_ids (shape {}) or attention_mask (shape {})".format(input_shape,
+                                                                                                        attention_mask.shape))
 
         # Since attention_mask is 1.0 for positions we want to attend and 0.0 for
         # masked positions, this operation will create a tensor which is 0.0 for
@@ -103,10 +106,13 @@ class BertV0(BertPreTrainedModel):
             elif encoder_attention_mask.dim() == 2:
                 encoder_extended_attention_mask = encoder_attention_mask[:, None, None, :]
             else:
-                raise ValueError("Wrong shape for encoder_hidden_shape (shape {}) or encoder_attention_mask (shape {})".format(encoder_hidden_shape,
-                                                                                                                               encoder_attention_mask.shape))
+                raise ValueError(
+                    "Wrong shape for encoder_hidden_shape (shape {}) or encoder_attention_mask (shape {})".format(
+                        encoder_hidden_shape,
+                        encoder_attention_mask.shape))
 
-            encoder_extended_attention_mask = encoder_extended_attention_mask.to(dtype=next(self.parameters()).dtype)  # fp16 compatibility
+            encoder_extended_attention_mask = encoder_extended_attention_mask.to(
+                dtype=next(self.parameters()).dtype)  # fp16 compatibility
             encoder_extended_attention_mask = (1.0 - encoder_extended_attention_mask) * -10000.0
         else:
             encoder_extended_attention_mask = None
@@ -121,19 +127,20 @@ class BertV0(BertPreTrainedModel):
                 head_mask = head_mask.unsqueeze(0).unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
                 head_mask = head_mask.expand(self.config.num_hidden_layers, -1, -1, -1, -1)
             elif head_mask.dim() == 2:
-                head_mask = head_mask.unsqueeze(1).unsqueeze(-1).unsqueeze(-1)  # We can specify head_mask for each layer
-            head_mask = head_mask.to(dtype=next(self.parameters()).dtype)  # switch to fload if need + fp16 compatibility
+                head_mask = head_mask.unsqueeze(1).unsqueeze(-1).unsqueeze(
+                    -1)  # We can specify head_mask for each layer
+            head_mask = head_mask.to(
+                dtype=next(self.parameters()).dtype)  # switch to fload if need + fp16 compatibility
         else:
             head_mask = [None] * self.config.num_hidden_layers
 
-        embedding_output = self.embeddings(input_ids=input_ids, position_ids=position_ids, token_type_ids=token_type_ids, inputs_embeds=inputs_embeds)
+        embedding_output = self.embeddings(input_ids=input_ids, position_ids=position_ids,
+                                           token_type_ids=token_type_ids, inputs_embeds=inputs_embeds)
         encoder_outputs = self.encoder(embedding_output,
                                        attention_mask=extended_attention_mask,
                                        head_mask=head_mask,
                                        encoder_hidden_states=encoder_hidden_states,
                                        encoder_attention_mask=encoder_extended_attention_mask)
-        sequence_output = encoder_outputs[0]
 
-        outputs = (sequence_output, ) + encoder_outputs[1:]  # add hidden_states and attentions if they are here
+        outputs = encoder_outputs  # add hidden_states and attentions if they are here
         return outputs  # sequence_output, (hidden_states), (attentions)
-
