@@ -3,7 +3,9 @@ from transformers.modeling_bert import BertModel
 from transformers.modeling_bert import BertEmbeddings
 from transformers.modeling_bert import BertEncoder
 from transformers.modeling_bert import BertLayerNorm
+from transformers import BertConfig
 import torch
+from torch.nn import BatchNorm1d
 
 
 class BertV0(BertPreTrainedModel):
@@ -144,3 +146,9 @@ class BertV0(BertPreTrainedModel):
 
         outputs = encoder_outputs  # add hidden_states and attentions if they are here
         return outputs  # sequence_output, (hidden_states), (attentions)
+
+
+if __name__ == '__main__':
+    config = BertConfig(hidden_size=16, max_position_embeddings=32, type_vocab_size=8, vocab_size=256,
+                        num_attention_heads=16, intermediate_size=16)
+    _ = BertV0(config)
