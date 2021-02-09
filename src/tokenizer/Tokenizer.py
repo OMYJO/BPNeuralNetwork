@@ -9,3 +9,6 @@ class TokenizerV0(object):
         self.sep_token = sep_token
         if self.sep_token is not None and self.sep_token not in self.vocab:
             raise ValueError("sep_token {} do not exist in vocabulary")
+
+    def tokenize(self):
+        pass
