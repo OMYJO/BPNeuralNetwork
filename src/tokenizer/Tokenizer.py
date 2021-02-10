@@ -58,11 +58,11 @@ class TokenizerV0(object):
                 for word in x.blue.pick:
                     words.append(self.vocab.index(word))
                     positions.append(0)
-                    types.append(1)
+                    types.append(5)
                 for word in x.red.pick:
                     words.append(self.vocab.index(word))
                     positions.append(0)
-                    types.append(2)
+                    types.append(6)
 
             r.append((words, positions, types))
         return r
