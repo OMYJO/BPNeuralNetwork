@@ -16,14 +16,16 @@ class TokenizerV0(object):
             words = x["hero"]
             positions = x["pos"]
             types = x["type"]
+            # 添加特殊token
             if self.sep_token is not None:
                 words = [self.vocab.index(self.sep_token)] * 2 + words
                 positions = [-100] * 2 + positions
-                types = [4] * 2 + types
+                types = [0, 1] + types
             if self.cls_token is not None:
                 words = [self.vocab.index(self.cls_token)] + words
                 positions = [-100] + positions
                 types = [4] + types
+            # 全局bp的信息补全
             if is_global_ban_pick and given_global_ban_pick:
                 for j in range(i):
                     for k in range(len(x["hero"])):
@@ -43,16 +45,17 @@ class TokenizerV0(object):
                             types.append(6)
                         else:
                             raise ValueError("The team {} is a error team!".format(that_team))
+            # 位置编码整理
             pos_set = list(set(positions))
             pos_set.sort()
             pos_dict = dict(zip(pos_set, range(len(pos_set))))
             positions = [pos_dict[p] for p in positions]
-
+            # 序列过长截断
             assert len(words) == len(positions) == len(types)
             if len(words) > self.max_len:
                 words = words[:self.max_len]
                 positions = positions[:self.max_len]
                 types = positions[:self.max_len]
-
+            # 装车
             r.append((words, positions, types))
         return r
