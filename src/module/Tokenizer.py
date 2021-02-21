@@ -1,8 +1,10 @@
 class TokenizerV0(object):
     def __init__(self, max_len: int, vocab_file, cls_token=None, sep_token=None):
         self.max_len = max_len
+        self.vocab = []
         with open(vocab_file, 'r', encoding="utf-8") as f:
-            self.vocab = list(f)
+            for line in f:
+                self.vocab.append(line.strip())
         self.cls_token = cls_token
         if self.cls_token is not None and self.cls_token not in self.vocab:
             raise ValueError("cls_token {} do not exist in vocabulary")
@@ -13,7 +15,7 @@ class TokenizerV0(object):
     def tokenize(self, match, is_global_ban_pick=False, given_global_ban_pick=True):
         r = []
         for i, x in enumerate(match):
-            words = x["hero"]
+            words = [self.vocab.index(word) for word in x["hero"]]
             positions = x["pos"]
             types = x["type"]
             # 添加特殊token
@@ -55,14 +57,19 @@ class TokenizerV0(object):
             if len(words) > self.max_len:
                 words = words[:self.max_len]
                 positions = positions[:self.max_len]
-                types = positions[:self.max_len]
+                types = types[:self.max_len]
             # 装车
             r.append((words, positions, types))
         return r
 
+
 if __name__ == '__main__':
     import json
     import os
-    with open(os.path.join("data","1.json"),"r",encoding="utf-8") as f
-        data = json.load(f)
 
+    with open(os.path.join("../../", "data", "22.json"), "r", encoding="utf-8") as f:
+        data = json.load(f)
+    vocab = os.path.join("../../", "models", "version0", "vocab.txt")
+    tokenizer = TokenizerV0(64, vocab, "[CLS]", "[SEP]")
+    for match in data:
+        print(tokenizer.tokenize(match, match[0]["is_overallBP"], True))
