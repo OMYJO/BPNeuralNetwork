@@ -59,3 +59,10 @@ class TokenizerV0(object):
             # 装车
             r.append((words, positions, types))
         return r
+
+if __name__ == '__main__':
+    import json
+    import os
+    with open(os.path.join("data","1.json"),"r",encoding="utf-8") as f
+        data = json.load(f)
+
