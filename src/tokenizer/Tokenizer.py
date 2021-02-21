@@ -13,56 +13,46 @@ class TokenizerV0(object):
     def tokenize(self, match, is_global_ban_pick=False, given_global_ban_pick=True):
         r = []
         for i, x in enumerate(match):
-            words = []
-            positions = []
-            types = []
-            cnt = 0
-            if self.cls_token is not None:
-                words.append(self.vocab.index(self.cls_token))
-                positions.append(0)
-                types.append(0)
+            words = x["hero"]
+            positions = x["pos"]
+            types = x["type"]
             if self.sep_token is not None:
-                words.append(self.vocab.index(self.sep_token))
-                positions.append(0)
-                types.append(1)
-                words.append(self.vocab.index(self.sep_token))
-                positions.append(0)
-                types.append(2)
-            cnt += 1
-            if i < 6 or not is_global_ban_pick:
-                template_camp___ = [0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1]
-                template_banpick = [1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0]
-                assert len(template_camp___) == len(template_banpick)
-                cnt_banpick = [0, 0, 0, 0]
-                for j in range(len(template_camp___)):
-                    if template_camp___[j] == 0:
-                        camp = x.blue
-                    else:
-                        camp = x.red
-                    if template_banpick[j] == 0:
-                        banpick = camp.pick
-                    else:
-                        banpick = camp.ban
-                    idx = 2 * template_camp___[j] + template_banpick[j]
-                    if len(banpick) > cnt_banpick[idx]:
-                        words.append(self.vocab.index(banpick[cnt_banpick[idx]]))
-                        cnt_banpick[idx] += 1
-                        positions.append(cnt)
-                        cnt += 1
-                        types.append(template_camp___[j] + 1 + 2 * template_banpick[j])
+                words = [self.vocab.index(self.sep_token)] * 2 + words
+                positions = [-100] * 2 + positions
+                types = [4] * 2 + types
+            if self.cls_token is not None:
+                words = [self.vocab.index(self.cls_token)] + words
+                positions = [-100] + positions
+                types = [4] + types
+            if is_global_ban_pick and given_global_ban_pick:
+                for j in range(i):
+                    for k in range(len(x["hero"])):
+                        if match[j]["type"][k] == 0:
+                            that_team = match[j]["blue"]
+                        elif match[j]["type"][k] == 1:
+                            that_team = match[j]["red"]
+                        else:
+                            continue
+                        if that_team == x["blue"]:
+                            words.append(self.vocab.index(match[j]["hero"][k]))
+                            positions.append(-100)
+                            types.append(5)
+                        elif that_team == x["red"]:
+                            words.append(self.vocab.index(match[j]["hero"][k]))
+                            positions.append(-100)
+                            types.append(6)
+                        else:
+                            raise ValueError("The team {} is a error team!".format(that_team))
+            pos_set = list(set(positions))
+            pos_set.sort()
+            pos_dict = dict(zip(pos_set, range(len(pos_set))))
+            positions = [pos_dict[p] for p in positions]
 
-                if is_global_ban_pick and given_global_ban_pick:
-                    for j in range(i):
-                        pass
-            else:
-                for word in x.blue.pick:
-                    words.append(self.vocab.index(word))
-                    positions.append(0)
-                    types.append(5)
-                for word in x.red.pick:
-                    words.append(self.vocab.index(word))
-                    positions.append(0)
-                    types.append(6)
+            assert len(words) == len(positions) == len(types)
+            if len(words) > self.max_len:
+                words = words[:self.max_len]
+                positions = positions[:self.max_len]
+                types = positions[:self.max_len]
 
             r.append((words, positions, types))
         return r
