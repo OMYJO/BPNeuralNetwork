@@ -24,5 +24,5 @@ class WoLPoolingV0(PreTrainedModel):
         self.linear = nn.Linear(config.hidden_size, 2)
 
     def forward(self, input):
-        output = self.linear(input)
+        output = self.linear(input[:, 0, :])
         return output

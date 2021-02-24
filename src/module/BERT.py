@@ -6,6 +6,7 @@ from transformers.modeling_bert import BertLayerNorm
 from transformers import BertConfig
 import torch
 from torch import nn
+from typing import Dict
 
 
 class BertV0(BertPreTrainedModel):
@@ -15,7 +16,6 @@ class BertV0(BertPreTrainedModel):
 
     def __init__(self, config, *inputs, **kwargs):
         super().__init__(config, *inputs, **kwargs)
-        self.config = config
 
         self.embeddings = BertEmbeddings(config)
         self.embeddings.LayerNorm = BertLayerNorm(config.hidden_size, eps=config.layer_norm_eps,
@@ -43,23 +43,16 @@ class BertV0(BertPreTrainedModel):
         if isinstance(module, nn.Linear) and module.bias is not None:
             module.bias.data.zero_()
 
-    def forward(self, input_ids=None, attention_mask=None, token_type_ids=None, position_ids=None,
-                head_mask=None, inputs_embeds=None, encoder_hidden_states=None, encoder_attention_mask=None):
-        """ Forward pass on the Model.
+    def forward(self, input: Dict):
+        input_ids = input["input_ids"] if "input_ids" in input else None
+        attention_mask = input["attention_mask"] if "attention_mask" in input else None
+        token_type_ids = input["token_type_ids"] if "token_type_ids" in input else None
+        position_ids = input["position_ids"] if "position_ids" in input else None
+        head_mask = input["head_mask"] if "head_mask" in input else None
+        inputs_embeds = input["inputs_embeds"] if "inputs_embeds" in input else None
+        encoder_hidden_states = input["encoder_hidden_states"] if "encoder_hidden_states" in input else None
+        encoder_attention_mask = input["encoder_attention_mask"] if "encoder_attention_mask" in input else None
 
-        The model can behave as an encoder (with only self-attention) as well
-        as a decoder, in which case a layer of cross-attention is added between
-        the self-attention layers, following the architecture described in `Attention is all you need`_ by Ashish Vaswani,
-        Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Lukasz Kaiser and Illia Polosukhin.
-
-        To behave as an decoder the model needs to be initialized with the
-        `is_decoder` argument of the configuration set to `True`; an
-        `encoder_hidden_states` is expected as an input to the forward pass.
-
-        .. _`Attention is all you need`:
-            https://arxiv.org/abs/1706.03762
-
-        """
         if input_ids is not None and inputs_embeds is not None:
             raise ValueError("You cannot specify both input_ids and inputs_embeds at the same time")
         elif input_ids is not None:
