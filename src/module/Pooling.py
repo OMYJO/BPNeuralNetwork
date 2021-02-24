@@ -10,8 +10,7 @@ class SequencePoolingV0(nn.Module):
 
 class MLMPoolingV0(PreTrainedModel):
     def __init__(self, config: BertConfig):
-        super().__init__()
-        self.config = config
+        super().__init__(config)
         self.linear = nn.Linear(config.hidden_size, config.vocab_size)
 
     def forward(self, input):
@@ -21,8 +20,7 @@ class MLMPoolingV0(PreTrainedModel):
 
 class WoLPoolingV0(PreTrainedModel):
     def __init__(self, config):
-        super().__init__()
-        self.config = config
+        super().__init__(config)
         self.linear = nn.Linear(config.hidden_size, 2)
 
     def forward(self, input):
