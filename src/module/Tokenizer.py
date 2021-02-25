@@ -18,6 +18,7 @@ class TokenizerV0(object):
             words = [self.vocab.index(word) for word in x["hero"]]
             positions = x["pos"]
             types = x["type"]
+            assert len(words) == len(positions) == len(types)
             # 添加特殊token
             if self.sep_token is not None:
                 words = [self.vocab.index(self.sep_token)] * 2 + words

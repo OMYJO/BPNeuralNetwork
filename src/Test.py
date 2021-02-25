@@ -28,10 +28,9 @@ def main2():
             with open(os.path.join(basic_path, file_name), "r", encoding="utf-8") as f:
                 matchs = list(json.load(f))
                 for match in matchs:
-                    if len(match) > 0:
-                        data_set += tokenizer.tokenize(match, match[0]["is_overallBP"], True)
-    train_set = dataset.ConcatDataset(data_set)
-    train_loader = dataloader.DataLoader(train_set, batch_size=16, shuffle=True)
+                    data_set += tokenizer.tokenize(match, match[0]["is_overallBP"], True)
+    train_set = dataset.ConcatDataset([data_set])
+    train_loader = dataloader.DataLoader(train_set, batch_size=1, shuffle=True)
     for x in train_loader:
         print(x)
 
