@@ -1,11 +1,12 @@
 import os
 import json
-from torch.utils.data import dataset, dataloader
+from torch.utils.data import dataloader
 from transformers import BertConfig
 from src.module.BERT import BertV0
 from src.module.Pooling import SequencePoolingV0, MLMPoolingV0
 from src.module.Trainer import TrainerV0
 from src.module.Tokenizer import TokenizerV0
+from src.dataset.DataSet import ListDataSetV0
 
 def main1():
     config = BertConfig(hidden_size=16, max_position_embeddings=32, type_vocab_size=8, vocab_size=256,
@@ -29,8 +30,8 @@ def main2():
                 matchs = list(json.load(f))
                 for match in matchs:
                     data_set += tokenizer.tokenize(match, match[0]["is_overallBP"], True)
-    train_set = dataset.ConcatDataset([data_set])
-    train_loader = dataloader.DataLoader(train_set, batch_size=1, shuffle=True)
+    train_set = ListDataSetV0(data_set)
+    train_loader = dataloader.DataLoader(train_set, batch_size=16, shuffle=False, collate_fn=lambda x:x)
     for x in train_loader:
         print(x)
 
