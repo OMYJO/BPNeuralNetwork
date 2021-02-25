@@ -66,10 +66,11 @@ class TokenizerV0(object):
 if __name__ == '__main__':
     import json
     import os
-
     with open(os.path.join("../../", "data", "22.json"), "r", encoding="utf-8") as f:
         data = json.load(f)
     vocab = os.path.join("../../", "models", "version0", "vocab.txt")
     tokenizer = TokenizerV0(64, vocab, "[CLS]", "[SEP]")
     for match in data:
         print(tokenizer.tokenize(match, match[0]["is_overallBP"], True))
+        break
+
