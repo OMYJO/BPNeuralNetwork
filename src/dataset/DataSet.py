@@ -14,7 +14,7 @@ class ListDataSetV0(Dataset):
         return self._dataset[item]
 
 
-class LabelDataSetV0(Dataset):
+class MultiListDataSetV0(Dataset):
     def __init__(self, *dataset):
         self._dataset = dataset
 

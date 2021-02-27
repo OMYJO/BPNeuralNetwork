@@ -8,7 +8,7 @@ from src.module.Trainer import TrainerV0
 from src.module.Tokenizer import TokenizerV0
 from src.module.Tokenizer import TokenizerV1
 from src.dataset.DataSet import ListDataSetV0
-from src.dataset.DataSet import LabelDataSetV0
+from src.dataset.DataSet import MultiListDataSetV0
 
 def main1():
     config = BertConfig(hidden_size=16, max_position_embeddings=32, type_vocab_size=8, vocab_size=256,
@@ -53,7 +53,7 @@ def main3():
                     x, y = tokenizer.tokenize(match)
                     data_set += x
                     label_set += y
-    train_set = LabelDataSetV0(data_set, label_set)
+    train_set = MultiListDataSetV0(data_set, label_set)
     train_loader = dataloader.DataLoader(train_set, batch_size=16, shuffle=False,
                                          collate_fn=lambda u: ([i[0] for i in u], [i[1] for i in u]))
     for x, y in train_loader:
