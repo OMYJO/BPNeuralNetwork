@@ -64,6 +64,22 @@ class TokenizerV0(object):
         return r
 
 
+class TokenizerV1(TokenizerV0):
+    """
+    给出阵容及胜方标签
+    """
+    def tokenize(self, match):
+        x = super().tokenize(match, False, False)
+        y = []
+        for i in match:
+            if i["is_win"] == "blue":
+                y.append(0)
+            else:
+                y.append(1)
+        assert len(x) == len(y)
+        return x, y
+
+
 if __name__ == '__main__':
     import json
     import os
@@ -73,5 +89,10 @@ if __name__ == '__main__':
     tokenizer = TokenizerV0(64, vocab, "[CLS]", "[SEP]")
     for match in data:
         print(tokenizer.tokenize(match, match[0]["is_overallBP"], True))
+        break
+    tokenizer = TokenizerV1(64, vocab, "[CLS]", "[SEP]")
+    for match in data:
+        x, y = tokenizer.tokenize(match)
+        print(x, y)
         break
 
