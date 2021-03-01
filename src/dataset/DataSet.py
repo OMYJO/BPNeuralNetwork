@@ -12,3 +12,14 @@ class ListDataSetV0(Dataset):
 
     def __getitem__(self, item):
         return self._dataset[item]
+
+
+class MultiListDataSetV0(Dataset):
+    def __init__(self, *dataset):
+        self._dataset = dataset
+
+    def __getitem__(self, index: int):
+        return tuple(dataset[index] for dataset in self._dataset)
+
+    def __len__(self) -> int:
+        return len(self._dataset[0])
