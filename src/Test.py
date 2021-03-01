@@ -2,7 +2,7 @@ import os
 import json
 from torch.utils.data import dataloader
 from transformers import BertConfig
-from src.module.BERT import BertV0
+from module.BERT import BertV0
 from src.module.Pooling import SequencePoolingV0, MLMPoolingV0
 from src.module.Trainer import TrainerV0
 from src.module.Tokenizer import TokenizerV0

@@ -137,4 +137,3 @@ class TrainerV0(nn.Sequential):  # 列表 按顺序放入模块[bert->CNN->relu]
 
 
 
-
