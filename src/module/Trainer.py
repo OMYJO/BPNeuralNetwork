@@ -4,6 +4,9 @@ import torch
 from torch import nn
 from torch.optim.lr_scheduler import LambdaLR
 import os
+from src.module.Dataloader import DataGenerate
+import src.module.Dataloader2 as Dataloader
+import src.module.Dataloader as dl
 from src.module.Pooling import MLMPoolingV0
 from src.module.Tokenizer import TokenizerV0
 import random
@@ -18,23 +21,25 @@ class TrainerV0(nn.Sequential):  # 列表 按顺序放入模块[bert->CNN->relu]
         lr_schedule = lambda epoch: 0.1 * (epoch + 1) / warm_up if epoch < warm_up else gamma ** (
                 (epoch + 1 - warm_up) // step_size)
         scheduler = LambdaLR(optimizer=optimizer, lr_lambda=lr_schedule)
-        input, ground_truth, mask_position = tokenizer_train(train)
-        model = PreTrainedModel()
-        loss = nn.CrossEntropyLoss()
+        loss_function = nn.CrossEntropyLoss()
+        # datagen = DataGenerate([], device)
         for epoch in range(warm_up + n_epoch):
-            self.to(device)
+            self.to(device)  #
             self.train()
-            for i in range(len(input)):   #
-                predict = model.forward(input)
-                loss = loss(predict, target.long())
+            for batch in train:   #
+                # batch_tensor, label, mask = datagen(batch)
+                train_dic, mask = Dataloader.data_generate(batch)
                 optimizer.zero_grad()
-                # torch.cuda.synchronize()
+                # functor 算子 伪函数
+                y_pre = self(train_dic)
+                loss = TrainerV0.loss_calculate(y_pre, mask, loss_function=loss_function)
                 loss.backward()
+                optimizer.step()
+                # torch.cuda.synchronize()
                 # train -> make_attention_mask ->attention_mask(替换)->tuple转tensor
                 #       -> tuple 转 tensor
                 #           [[][][][]] / [[][][][]] / [[][][][]]    (tensor)
                 # torch.cuda.synchronize()
-                optimizer.step()
             self.eval()
             if dev is not None:  # 胜场预测
                 for _ in dev:
@@ -45,12 +50,13 @@ class TrainerV0(nn.Sequential):  # 列表 按顺序放入模块[bert->CNN->relu]
     @staticmethod
     def make_attention_mask(seq_self, device):    # 我怎么觉得这个函数有点问题
         max_len_q = max(len(seq) for seq in seq_self)
-        attention_mask = torch.zeros([len(seq_self), max_len_q, max_len_q], device=device)
+        attention_mask = torch.zeros([len(seq_self), max_len_q, max_len_q], device=device)  # divice
         for i, seq in enumerate(seq_self):
             for j in range(len(seq)):
                 for k in range(len(seq)):
                     attention_mask[i, j, k] = 1
         return attention_mask
+
 
     def save_pretrained(self, save_directory: str):
         assert os.path.isdir(save_directory)
@@ -61,79 +67,20 @@ class TrainerV0(nn.Sequential):  # 列表 按顺序放入模块[bert->CNN->relu]
             if isinstance(self[i], PreTrainedModel):
                 self[i].save_pretrained(module_path)
 
-    def tokenizer_path(self, data_name):
-        data_name = str(data_name)+".json"
-        vocab = os.path.join("../../", "models", "version0", "vocab.txt")
-        tokenizer = TokenizerV0(64, vocab, "[CLS]", "[SEP]")
-        dic_len = len(tokenizer.vocab)
-        with open(os.path.join("../../", "data", data_name), "r", encoding="utf-8") as f:
-            data = json.load(f)
-        vocab = os.path.join("../../", "models", "version0", "vocab.txt")
-        tokenizer = TokenizerV0(64, vocab, "[CLS]", "[SEP]")
-        token = []
-        for match in data:
-            token.append(tokenizer.tokenize(match, match[0]["is_overallBP"], True))
-        token, position, ground_truth, type, mask_position = tensor_generate(token, dic_len)
-        return input, ground_truth, mask_position
+    @staticmethod
+    def loss_calculate(y_pre, mask, loss_function):
+        if len(mask)==0:
+            raise ValueError()
+        l = [mask[0][2]]
+        r = y_pre[mask[0][0], mask[0][1], :].unsqueeze(0)
+        for i in range(1, len(mask)):
+            l.append(mask[i][2])
+            r = torch.cat((r, y_pre[mask[i][0], mask[i][1], :].unsqueeze(0)), 0)
+        y_true = torch.Tensor(l)
+        return loss_function(r, y_true)
 
-    def tokenizer_train(self, train):
-        vocab = os.path.join("../../", "models", "version0", "vocab.txt")
-        tokenizer = TokenizerV0(64, vocab, "[CLS]", "[SEP]")
-        token = []
-        dic_len = len(tokenizer.vocab)
-        for match in train:
-            token.append(tokenizer.tokenize(match, match[0]["is_overallBP"], True))
-        token, position, ground_truth, type, mask_position = tensor_generate(token, dic_len)
-        return input, ground_truth, mask_position
-
-    def zero_file(self, short_list, max_len):
-        for i in range(max_len - len(short_list)):
-            short_list.append(0)
-        return short_list
-
-    def tensor_generate(self, train, dic_len):
-        token = []
-        type = []
-        position = []
-        ground_truth = []
-        mask_position = []
-        attention_mask = make_attention_mask(train)  # 我怎么觉得这个函数有点问题
-        mask_rule = lambda rand: 3 if rand < 0.8 else (battle_copy[hero] if rand > 0.9 else random.randint(16, dic_len))
-        max_len = 15
-        for competition in train:
-            for battle in competition:
-                if len(battle[0])<max_len:
-                    max_len = len(battle[0])
-        for competition in train:
-            for battle in competition:
-                ground_truth.append(zero_file(battle[0], max_len))
-                position.append(zero_file(battle[1], max_len))
-                type.append(zero_file(battle[2]), max_len)
-                battle_copy = copy.deepcopy(battle[0])
-                battle_mask = [0 for i in range(max_len)]
-
-                for hero in range(len(battle_copy)):
-                    if random.random() < 0.15:
-                        battle_mask[hero] = 1
-                        masktype = random.random()
-                        battle_copy[hero] = mask_rule(masktype)
-                mask_position.append(zero_file(battle_mask))
-                token.append(zero_file(battle_copy), max_len)
-        token = torch.Tensor(token)
-        ground_truth = torch.Tensor(ground_truth)
-        position = torch.Tensor(position)
-        type = torch.Tensor(type)
-        input = []
-        for i in range(len(token)):
-            input_single = {}
-            input_single["attention_mask"] = attention_mask[i]
-            input_single["input_ids"] = token[i]
-            input_single["position_ids"] = position[i]
-            input_single["token_type_ids"] = type[i]
-            input.append(input_single)
-        return input, ground_truth, mask_position
-
-
-
-
-
+    # x = batch * m(句子长度) * h
+    # y = batch * h
+    # size(mask_size * n, h) <- x
+    # size(mask_size) <- y
+    # mask 修改为 一个列表的三元组
