@@ -67,7 +67,7 @@ class TrainerV0(nn.Sequential):  # 列表 按顺序放入模块[bert->CNN->relu]
         assert os.path.isdir(save_directory)
         os.makedirs(save_directory, exist_ok=True)
         for i in range(len(self)):
-            module_path = os.path.join(save_directory, str(i))
+            module_path = os.path.join(save_directory, str(i)+"_"+type(self[i]).__name__)
             os.makedirs(module_path, exist_ok=True)
             if isinstance(self[i], PreTrainedModel):
                 self[i].save_pretrained(module_path)

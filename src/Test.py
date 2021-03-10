@@ -65,13 +65,13 @@ def main3():
 
 
 def main4():
-    epochs = 10
+    epochs = 400
     lr = 2e-5
-    warm_up = 2
+    warm_up = 20
     batch_size = 8192
     now = datetime.datetime.today()
     save = os.path.join("..", "models", "version0", now.strftime("%Y%m%d%H%M%S"))
-    os.makedirs(save,exist_ok=True)
+    os.makedirs(save, exist_ok=True)
     vocab = os.path.join("..", "models", "version0", "vocab.txt")
     tokenizer = TokenizerV0(80, vocab, "[CLS]", "[SEP]")
     data_set = []
