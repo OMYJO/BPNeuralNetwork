@@ -57,13 +57,9 @@ def data_generate(data_batch, vocab_len=120, device="cpu"):
                     hero.append(competition[0][hero_id])
             else:
                 hero.append(competition[0][hero_id])
-        for j in range(max_len_q - len(competition[0])):
-            hero.append(0)
-            competition[1].append(0)
-            competition[2].append(0)
-        hero_battle.append(hero)
-        position_battle.append(competition[1])
-        type_token_battle.append(competition[2])
+        hero_battle.append(hero + [0]*(max_len_q - len(competition[0])))
+        position_battle.append(competition[1] + [0]*(max_len_q - len(competition[0])))
+        type_token_battle.append(competition[2] + [0]*(max_len_q - len(competition[0])))
         # battle = (hero, competition[1], competition[2])
         # batch.append(battle)
         # ground_truth.append(competition[0])
