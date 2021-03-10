@@ -21,7 +21,7 @@ def main1():
         SequencePoolingV0(),
         MLMPoolingV0(config)
     )
-    trainer.save_pretrained(os.path.join("..", "models", "version0"))
+    trainer.save(os.path.join("..", "models", "version0"))
 
 
 def main2():

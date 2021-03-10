@@ -49,7 +49,7 @@ class TrainerV0(nn.Sequential):  # 列表 按顺序放入模块[bert->CNN->relu]
             if dev is not None:  # 胜场预测
                 for _ in dev:
                     pass
-            self.save_pretrained(save_path)
+            self.save(save_path)
             scheduler.step(epoch)
         return training_loss
 
@@ -63,7 +63,7 @@ class TrainerV0(nn.Sequential):  # 列表 按顺序放入模块[bert->CNN->relu]
                     attention_mask[i, j, k] = 1
         return attention_mask
 
-    def save_pretrained(self, save_directory: str):
+    def save(self, save_directory: str):
         assert os.path.isdir(save_directory)
         os.makedirs(save_directory, exist_ok=True)
         for i in range(len(self)):
