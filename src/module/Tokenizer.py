@@ -54,12 +54,12 @@ class TokenizerV0(object):
             pos_dict = dict(zip(pos_set, range(len(pos_set))))
             positions = [pos_dict[p] for p in positions]
             # 序列过长截断
-            assert len(words) == len(positions) == len(types)
             if len(words) > self.max_len:
                 words = words[:self.max_len]
                 positions = positions[:self.max_len]
                 types = types[:self.max_len]
             # 装车
+            assert len(words) == len(positions) == len(types)
             r.append((words, positions, types))
         return r
 
