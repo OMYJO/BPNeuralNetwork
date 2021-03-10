@@ -4,13 +4,14 @@ import datetime
 import torch
 from torch.utils.data import dataloader
 from transformers import BertConfig
-from src.module.BERT import BertV0
-from src.module.Pooling import SequencePoolingV0, MLMPoolingV0
-from src.module.Trainer import TrainerV0
-from src.module.Tokenizer import TokenizerV0
-from src.module.Tokenizer import TokenizerV1
-from src.dataset.DataSet import ListDataSetV0
-from src.dataset.DataSet import MultiListDataSetV0
+from module.BERT import BertV0
+from module.Pooling import SequencePoolingV0, MLMPoolingV0
+from module.Trainer import TrainerV0
+from module.Tokenizer import TokenizerV0
+from module.Tokenizer import TokenizerV1
+from dataset.DataSet import ListDataSetV0
+from dataset.DataSet import MultiListDataSetV0
+
 
 def main1():
     config = BertConfig(hidden_size=16, max_position_embeddings=32, type_vocab_size=8, vocab_size=256,
@@ -67,10 +68,12 @@ def main4():
     epochs = 10
     lr = 2e-5
     warm_up = 2
+    batch_size = 8192
     now = datetime.datetime.today()
     save = os.path.join("..", "models", "version0", now.strftime("%Y%m%d%H%M%S"))
+    os.makedirs(save,exist_ok=True)
     vocab = os.path.join("..", "models", "version0", "vocab.txt")
-    tokenizer = TokenizerV1(64, vocab, "[CLS]", "[SEP]")
+    tokenizer = TokenizerV0(80, vocab, "[CLS]", "[SEP]")
     data_set = []
     basic_path = os.path.join("..", "data")
     for file_name in os.listdir(basic_path):
@@ -80,13 +83,21 @@ def main4():
                 for match in matchs:
                     data_set += tokenizer.tokenize(match, match[0]["is_overallBP"], True)
     train_set = ListDataSetV0(data_set)
-    train_loader = dataloader.DataLoader(train_set, batch_size=16, shuffle=False, collate_fn=lambda u: u)
-    trainer = TrainerV0(BertV0, SequencePoolingV0, MLMPoolingV0)
+    train_loader = dataloader.DataLoader(train_set, batch_size=batch_size, shuffle=True, collate_fn=lambda u: u)
+    bert_config = BertConfig(vocab_size=256,
+                             hidden_size=12,
+                             num_hidden_layers=1,
+                             num_attention_heads=3,
+                             intermediate_size=48,
+                             max_position_embeddings=80,
+                             type_vocab_size=8)
+    trainer = TrainerV0(BertV0(bert_config), SequencePoolingV0(), MLMPoolingV0(bert_config))
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     loss = trainer.fit(learn_rate=lr,
                        n_epoch=epochs,
                        train=train_loader,
                        save_path=save,
-                       device="cuda" if torch.cuda.is_available() else "cpu",
+                       device=device,
                        warm_up=warm_up)
     with open(os.path.join(save, "loss.json"), "w", encoding="utf-8") as f:
         json.dump(loss, f)

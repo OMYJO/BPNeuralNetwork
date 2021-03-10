@@ -3,8 +3,8 @@ import torch
 import os
 import json
 from torch.utils.data import dataloader
-from src.module.Tokenizer import TokenizerV0
-from src.dataset.DataSet import ListDataSetV0
+from module.Tokenizer import TokenizerV0
+from dataset.DataSet import ListDataSetV0
 
 
 def data_loader():
@@ -69,10 +69,10 @@ def data_generate(data_batch, vocab_len=120, device="cpu"):
         # ground_truth.append(competition[0])
         # mask_position.append(mask)
 
-    train_dic["input_ids"] = torch.Tensor(hero_battle, device=device).long()
+    train_dic["input_ids"] = torch.tensor(hero_battle, device=device).long()
     train_dic["attention_mask"] = make_attention_mask(old_hero, device)
-    train_dic["position_ids"] = torch.Tensor(position_battle, device=device).long()
-    train_dic["token_type_ids"] = torch.Tensor(type_token_battle, device=device).long()
+    train_dic["position_ids"] = torch.tensor(position_battle, device=device).long()
+    train_dic["token_type_ids"] = torch.tensor(type_token_battle, device=device).long()
     return train_dic, mask
 
 
