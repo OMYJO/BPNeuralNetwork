@@ -1,8 +1,10 @@
 import os
 import json
+import datetime
+import torch
 from torch.utils.data import dataloader
 from transformers import BertConfig
-from module.BERT import BertV0
+from src.module.BERT import BertV0
 from src.module.Pooling import SequencePoolingV0, MLMPoolingV0
 from src.module.Trainer import TrainerV0
 from src.module.Tokenizer import TokenizerV0
@@ -61,5 +63,35 @@ def main3():
         break
 
 
+def main4():
+    epochs = 10
+    lr = 2e-5
+    warm_up = 2
+    now = datetime.datetime.today()
+    save = os.path.join("..", "models", "version0", now.strftime("%Y%m%d%H%M%S"))
+    vocab = os.path.join("..", "models", "version0", "vocab.txt")
+    tokenizer = TokenizerV1(64, vocab, "[CLS]", "[SEP]")
+    data_set = []
+    basic_path = os.path.join("..", "data")
+    for file_name in os.listdir(basic_path):
+        if "json" in file_name:
+            with open(os.path.join(basic_path, file_name), "r", encoding="utf-8") as f:
+                matchs = list(json.load(f))
+                for match in matchs:
+                    data_set += tokenizer.tokenize(match, match[0]["is_overallBP"], True)
+    train_set = ListDataSetV0(data_set)
+    train_loader = dataloader.DataLoader(train_set, batch_size=16, shuffle=False, collate_fn=lambda u: u)
+    trainer = TrainerV0(BertV0, SequencePoolingV0, MLMPoolingV0)
+    loss = trainer.fit(learn_rate=lr,
+                       n_epoch=epochs,
+                       train=train_loader,
+                       save_path=save,
+                       device="cuda" if torch.cuda.is_available() else "cpu",
+                       warm_up=warm_up)
+    with open(os.path.join(save, "loss.json"), "w", encoding="utf-8") as f:
+        json.dump(loss, f)
+
+
 if __name__ == '__main__':
-    main3()
+    # main3()
+    main4()

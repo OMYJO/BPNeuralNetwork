@@ -4,19 +4,26 @@ import torch
 from torch import nn
 from torch.optim.lr_scheduler import LambdaLR
 import os
-from src.module.Dataloader import DataGenerate
-import src.module.Dataloader2 as Dataloader
-import src.module.Dataloader as dl
-from src.module.Pooling import MLMPoolingV0
-from src.module.Tokenizer import TokenizerV0
-import random
-import copy
-import json
+import src.module.Dataloader as Dataloader
 
 
 class TrainerV0(nn.Sequential):  # 列表 按顺序放入模块[bert->CNN->relu]->输出self.0
     def fit(self, n_epoch: int, learn_rate: float, train, save_path: str, device="cpu", warm_up: int = 0, dev=None,
             gamma=0.99, step_size=100):
+        """
+
+        :param n_epoch:
+        :param learn_rate:
+        :param train:
+        :param save_path:
+        :param device:
+        :param warm_up:
+        :param dev:
+        :param gamma:
+        :param step_size:
+        :return:
+        """
+        training_loss = []
         optimizer = AdamW(self.parameters(), lr=learn_rate)
         lr_schedule = lambda epoch: 0.1 * (epoch + 1) / warm_up if epoch < warm_up else gamma ** (
                 (epoch + 1 - warm_up) // step_size)
@@ -35,6 +42,7 @@ class TrainerV0(nn.Sequential):  # 列表 按顺序放入模块[bert->CNN->relu]
                 loss = TrainerV0.loss_calculate(y_pre, mask, loss_function=loss_function)
                 loss.backward()
                 optimizer.step()
+                training_loss.append(float(loss.cpu()))
                 # torch.cuda.synchronize()
                 # train -> make_attention_mask ->attention_mask(替换)->tuple转tensor
                 #       -> tuple 转 tensor
@@ -46,6 +54,7 @@ class TrainerV0(nn.Sequential):  # 列表 按顺序放入模块[bert->CNN->relu]
                     pass
             self.save(save_path)
             scheduler.step(epoch)
+            return training_loss
 
     @staticmethod
     def make_attention_mask(seq_self, device):    # 我怎么觉得这个函数有点问题
