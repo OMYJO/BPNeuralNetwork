@@ -65,7 +65,7 @@ def main3():
 
 
 def main4():
-    epochs = 400
+    epochs = 200
     lr = 2e-5
     warm_up = 20
     batch_size = 8192
@@ -93,14 +93,12 @@ def main4():
                              type_vocab_size=8)
     trainer = TrainerV0(BertV0(bert_config), SequencePoolingV0(), MLMPoolingV0(bert_config))
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    loss = trainer.fit(learn_rate=lr,
-                       n_epoch=epochs,
-                       train=train_loader,
-                       save_path=save,
-                       device=device,
-                       warm_up=warm_up)
-    with open(os.path.join(save, "loss.json"), "w", encoding="utf-8") as f:
-        json.dump(loss, f)
+    trainer.fit(learn_rate=lr,
+                n_epoch=epochs,
+                train=train_loader,
+                save_path=save,
+                device=device,
+                warm_up=warm_up)
 
 
 if __name__ == '__main__':

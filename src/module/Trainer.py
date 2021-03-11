@@ -5,12 +5,14 @@ from torch import nn
 from torch.optim.lr_scheduler import LambdaLR
 import os
 import module.Dataloader as Dataloader
+import json
 
 
 class TrainerV0(nn.Sequential):  # 列表 按顺序放入模块[bert->CNN->relu]->输出self.0
     def fit(self, n_epoch: int, learn_rate: float, train, save_path: str, device="cpu", warm_up: int = 0, dev=None,
-            gamma=0.99, step_size=100, weight_decay: float = 0.01):
+            gamma=0.95, step_size=100, weight_decay: float = 0.01):
         training_loss = []
+        best_loss = float("inf")
 
         param_optimizer = list(self.named_parameters())
         no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
@@ -45,13 +47,17 @@ class TrainerV0(nn.Sequential):  # 列表 按顺序放入模块[bert->CNN->relu]
                 #       -> tuple 转 tensor
                 #           [[][][][]] / [[][][][]] / [[][][][]]    (tensor)
                 # torch.cuda.synchronize()
+            last_loss = training_loss[-1]
             self.eval()
             if dev is not None:  # 胜场预测
                 for _ in dev:
                     pass
-            self.save(save_path)
+            if last_loss < best_loss:
+                self.save(save_path)
+                best_loss = last_loss
             scheduler.step(epoch)
-        return training_loss
+            with open(os.path.join(save_path, "loss.json"), "w", encoding="utf-8") as f:
+                json.dump(training_loss, f)
 
     @staticmethod
     def make_attention_mask(seq_self, device):    # 我怎么觉得这个函数有点问题
