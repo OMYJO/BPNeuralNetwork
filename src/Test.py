@@ -72,7 +72,7 @@ def main4():
     # bert_config = BertConfig(vocab_size=256, hidden_size=12, num_hidden_layers=1, num_attention_heads=3,
     #                          intermediate_size=48, max_position_embeddings=80, type_vocab_size=8)
     # trainer = TrainerV0(BertV0(bert_config), SequencePoolingV0(), MLMPoolingV0(bert_config))
-    trainer = TrainerV0.load("../models/version0/20210312110858", BertV0, SequencePoolingV0, MLMPoolingV0)
+    trainer = TrainerV0.load("../models/version0/20210312174138", BertV0, SequencePoolingV0, MLMPoolingV0)
     now = datetime.datetime.today()
     save = os.path.join("..", "models", "version0", now.strftime("%Y%m%d%H%M%S"))
     os.makedirs(save, exist_ok=True)
