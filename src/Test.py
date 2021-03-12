@@ -65,14 +65,14 @@ def main3():
 
 
 def main4():
-    epochs = 100  # 200
-    lr = 5e-4  # 2e-5
+    epochs = 100  # 100  # 200
+    lr = 5e-3  # 5e-4  # 2e-5
     warm_up = 0  # 20
     batch_size = 8192
     # bert_config = BertConfig(vocab_size=256, hidden_size=12, num_hidden_layers=1, num_attention_heads=3,
     #                          intermediate_size=48, max_position_embeddings=80, type_vocab_size=8)
     # trainer = TrainerV0(BertV0(bert_config), SequencePoolingV0(), MLMPoolingV0(bert_config))
-    trainer = TrainerV0.load("../models/version0/20210311154148", BertV0, SequencePoolingV0, MLMPoolingV0)
+    trainer = TrainerV0.load("../models/version0/20210312110858", BertV0, SequencePoolingV0, MLMPoolingV0)
     now = datetime.datetime.today()
     save = os.path.join("..", "models", "version0", now.strftime("%Y%m%d%H%M%S"))
     os.makedirs(save, exist_ok=True)

@@ -15,9 +15,8 @@ class BertV0(BertPreTrainedModel):
     """
     config_class = BertConfig
 
-    def __init__(self, config, *inputs, **kwargs):
+    def __init__(self, config: BertConfig, *inputs, **kwargs):
         super().__init__(config, *inputs, **kwargs)
-
         self.embeddings = BertEmbeddings(config)
         self.embeddings.LayerNorm = BertLayerNorm(config.hidden_size, eps=config.layer_norm_eps,
                                                   elementwise_affine=False)
