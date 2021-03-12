@@ -9,6 +9,8 @@ class SequencePoolingV0(nn.Module):
 
 
 class MLMPoolingV0(PreTrainedModel):
+    config_class = BertConfig
+
     def __init__(self, config: BertConfig):
         super().__init__(config)
         self.linear = nn.Linear(config.hidden_size, config.vocab_size)
@@ -19,6 +21,8 @@ class MLMPoolingV0(PreTrainedModel):
 
 
 class WoLPoolingV0(PreTrainedModel):
+    config_class = BertConfig
+
     def __init__(self, config):
         super().__init__(config)
         self.linear = nn.Linear(config.hidden_size, 2)

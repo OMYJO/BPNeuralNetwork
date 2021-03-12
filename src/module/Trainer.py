@@ -31,7 +31,7 @@ class TrainerV0(nn.Sequential):  # 列表 按顺序放入模块[bert->CNN->relu]
         # datagen = DataGenerate([], device)
         for epoch in range(warm_up + n_epoch):
             self.train()
-            training_loss.append(0)
+            training_loss.append([0, 0])
             for batch in train:   #
                 # batch_tensor, label, mask = datagen(batch)
                 train_dic, mask = Dataloader.data_generate(batch, device=device)
@@ -41,12 +41,14 @@ class TrainerV0(nn.Sequential):  # 列表 按顺序放入模块[bert->CNN->relu]
                 loss = TrainerV0.loss_calculate(y_pre, mask, loss_function=loss_function, device=device)
                 loss.backward()
                 optimizer.step()
-                training_loss[-1] += float(loss.cpu()) * len(mask)
+                training_loss[-1][0] += float(loss.cpu()) * len(mask)
+                training_loss[-1][1] += len(mask)
                 # torch.cuda.synchronize()
                 # train -> make_attention_mask ->attention_mask(替换)->tuple转tensor
                 #       -> tuple 转 tensor
                 #           [[][][][]] / [[][][][]] / [[][][][]]    (tensor)
                 # torch.cuda.synchronize()
+            training_loss[-1] = training_loss[-1][0] / training_loss[-1][1]
             last_loss = training_loss[-1]
             self.eval()
             if dev is not None:  # 胜场预测
@@ -69,14 +71,28 @@ class TrainerV0(nn.Sequential):  # 列表 按顺序放入模块[bert->CNN->relu]
                     attention_mask[i, j, k] = 1
         return attention_mask
 
+    @classmethod
+    def load(cls, load_path: str, *args):
+        assert os.path.isdir(load_path)
+        modules = []
+        for i, module_class in enumerate(args):
+            if issubclass(module_class, PreTrainedModel):
+                module_path = os.path.join(load_path, str(i) + "_" + module_class.__name__)
+                module = module_class.from_pretrained(module_path)
+                modules.append(module)
+            else:
+                modules.append(module_class())
+        model = cls(*modules)
+        return model
+
     def save(self, save_directory: str):
         assert os.path.isdir(save_directory)
         os.makedirs(save_directory, exist_ok=True)
-        for i in range(len(self)):
-            module_path = os.path.join(save_directory, str(i)+"_"+type(self[i]).__name__)
+        for i, module in enumerate(self):
+            module_path = os.path.join(save_directory, str(i)+"_"+type(module).__name__)
             os.makedirs(module_path, exist_ok=True)
-            if isinstance(self[i], PreTrainedModel):
-                self[i].save_pretrained(module_path)
+            if isinstance(module, PreTrainedModel):
+                module.save_pretrained(module_path)
 
     @staticmethod
     def loss_calculate(y_pre, mask, loss_function, device):
