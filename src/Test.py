@@ -65,7 +65,7 @@ def main3():
 
 
 def main4():
-    epochs = 100  # 100  # 200
+    epochs = 235  # 65  # 100  # 200
     lr = 5e-3  # 5e-4  # 2e-5
     warm_up = 0  # 20
     batch_size = 8192
