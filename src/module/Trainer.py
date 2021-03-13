@@ -10,11 +10,13 @@ import json
 
 class TrainerV0(nn.Sequential):  # 列表 按顺序放入模块[bert->CNN->relu]->输出self.0
     def fit(self, n_epoch: int, learn_rate: float, train, save_path: str, device="cpu", warm_up: int = 0, dev=None,
-            gamma=0.95, step_size=100, weight_decay: float = 0.01):
+            gamma=0.95, step_size=100, weight_decay: float = 0.01, _filter=None):
         training_loss = []
         best_loss = float("inf")
 
         param_optimizer = list(self.named_parameters())
+        if _filter is not None:
+            param_optimizer = _filter(param_optimizer)
         no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
         optimizer_grouped_parameters = [
             {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)],

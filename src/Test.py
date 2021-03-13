@@ -65,14 +65,22 @@ def main3():
 
 
 def main4():
-    epochs = 235  # 65  # 100  # 200
-    lr = 5e-3  # 5e-4  # 2e-5
+    epochs = 100  # 235  # 65  # 100  # 200
+    lr = 1e-3  # 5e-3  # 5e-4  # 5e-4  # 2e-5
     warm_up = 0  # 20
     batch_size = 8192
     # bert_config = BertConfig(vocab_size=256, hidden_size=12, num_hidden_layers=1, num_attention_heads=3,
     #                          intermediate_size=48, max_position_embeddings=80, type_vocab_size=8)
     # trainer = TrainerV0(BertV0(bert_config), SequencePoolingV0(), MLMPoolingV0(bert_config))
-    trainer = TrainerV0.load("../models/version0/20210312174138", BertV0, SequencePoolingV0, MLMPoolingV0)
+    trainer = TrainerV0.load("../models/version0/20210312210206", BertV0, SequencePoolingV0, MLMPoolingV0)
+
+    def filter_(parameters):
+        r = []
+        for k, v in parameters:
+            if any(s in k for s in ["encoder.layer.1"]):
+                r.append((k, v))
+        return r
+
     now = datetime.datetime.today()
     save = os.path.join("..", "models", "version0", now.strftime("%Y%m%d%H%M%S"))
     os.makedirs(save, exist_ok=True)
@@ -94,9 +102,22 @@ def main4():
                 train=train_loader,
                 save_path=save,
                 device=device,
-                warm_up=warm_up)
+                warm_up=warm_up,
+                _filter=filter_)
 
+
+def deeper():
+    new_state_dict = {}
+    with open("../models/version0/20210312210206/0_BertV0/pytorch_model.bin", "rb") as f:
+        old_state_dict = torch.load(f, map_location="cpu")
+        for k, v in old_state_dict.items():
+            new_state_dict[k] = v
+            if "encoder.layer.0" in k:
+                new_state_dict[k.replace("encoder.layer.0", "encoder.layer.1")] = v.clone()
+    with open("pytorch_model.bin", "wb") as f1:
+        torch.save(new_state_dict, f1)
 
 if __name__ == '__main__':
     # main3()
     main4()
+    # deeper()
