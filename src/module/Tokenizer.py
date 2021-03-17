@@ -4,7 +4,8 @@ class TokenizerV0(object):
         self.vocab = []
         with open(vocab_file, 'r', encoding="utf-8") as f:
             for line in f:
-                self.vocab.append(line.strip())
+                if line:
+                    self.vocab.append(line.strip())
         self.cls_token = cls_token
         if self.cls_token is not None and self.cls_token not in self.vocab:
             raise ValueError("cls_token {} do not exist in vocabulary")

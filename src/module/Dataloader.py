@@ -28,9 +28,9 @@ def make_attention_mask(seq_self, device):
     max_len_q = max(len(seq) for seq in seq_self)
     attention_mask = torch.zeros([len(seq_self), max_len_q, max_len_q], device=device)  # divice
     for i, seq in enumerate(seq_self):
-        for j in range(len(seq)):
-            for k in range(len(seq)):
-                attention_mask[i, j, k] = 1
+        # for j in range(len(seq)):
+        #     for k in range(len(seq)):
+                attention_mask[i, :len(seq), :len(seq)] = 1
     return attention_mask
 
 

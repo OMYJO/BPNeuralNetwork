@@ -65,18 +65,39 @@ def main3():
 
 
 def main4():
+    device = "cuda:2" if torch.cuda.is_available() else "cpu"
     # epochs = 50  # 235  # 65  # 100  # 200
     # lr = 1e-3  # 5e-3  # 5e-4  # 5e-4  # 2e-5
     # warm_up = 0  # 20
     # batch_size = 8192
-    epochs = 200
-    lr = 1e-4
-    warm_up = 0
+    # epochs = 50  # 200
+    # lr = 1e-4
+    # warm_up = 0
+    # batch_size = 2048
+    # epochs = 100  # 200 # 500 # 50
+    # lr = 2e-3  # 1e-2 # 1e-3
+    # warm_up = 10  # 5
+    # batch_size = 2048
+    # epochs = 500
+    # lr = 1e-2
+    # warm_up = 20
+    # batch_size = 2048
+    epochs = 500
+    lr = 1e-2
+    warm_up = 20
     batch_size = 2048
     # bert_config = BertConfig(vocab_size=256, hidden_size=12, num_hidden_layers=1, num_attention_heads=3,
     #                          intermediate_size=48, max_position_embeddings=80, type_vocab_size=8)
-    # trainer = TrainerV0(BertV0(bert_config), SequencePoolingV0(), MLMPoolingV0(bert_config))
-    trainer = TrainerV0.load("../models/version0/20210313190112", BertV0, SequencePoolingV0, MLMPoolingV0)
+    # bert_config = BertConfig(vocab_size=121, hidden_size=12, num_hidden_layers=1, num_attention_heads=3,
+    #                          intermediate_size=48, max_position_embeddings=80, type_vocab_size=8)
+    # bert_config = BertConfig(vocab_size=121, hidden_size=12, num_hidden_layers=4, num_attention_heads=3,
+    #                          intermediate_size=48, max_position_embeddings=80, type_vocab_size=8)
+    bert_config = BertConfig(vocab_size=121, hidden_size=12, num_hidden_layers=1, num_attention_heads=3,
+                             intermediate_size=48, max_position_embeddings=80, type_vocab_size=8)
+    trainer = TrainerV0(BertV0(bert_config), SequencePoolingV0(), MLMPoolingV0(bert_config))
+    # trainer = TrainerV0.load("../models/version0/20210313220450", BertV0, SequencePoolingV0, MLMPoolingV0)
+    # trainer = TrainerV0.load("../models/version0/20210315145313", BertV0, SequencePoolingV0, MLMPoolingV0)
+    # trainer = TrainerV0.load("../models/version0/20210315161752", BertV0, SequencePoolingV0, MLMPoolingV0)
 
     def filter_(parameters):
         r = []
@@ -100,13 +121,12 @@ def main4():
                     data_set += tokenizer.tokenize(match, match[0]["is_overallBP"], True)
     train_set = ListDataSetV0(data_set)
     train_loader = dataloader.DataLoader(train_set, batch_size=batch_size, shuffle=True, collate_fn=lambda u: u)
-    device = "cuda" if torch.cuda.is_available() else "cpu"
     trainer.fit(learn_rate=lr,
                 n_epoch=epochs,
                 train=train_loader,
                 save_path=save,
                 device=device,
-                warm_up=warm_up)#,
+                warm_up=warm_up)
                 #_filter=filter_)
 
 
