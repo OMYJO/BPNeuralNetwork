@@ -147,9 +147,9 @@ def deeper():
 
 def main5():
     device = "cuda:2" if torch.cuda.is_available() else "cpu"
-    epochs = 100
+    epochs = 0 #100
     lr = 1e-3
-    warm_up = 20
+    warm_up = 1 #20
     batch_size = 2048
     # bert_config = BertConfig(vocab_size=121, hidden_size=12, num_hidden_layers=1, num_attention_heads=6,
     #                          intermediate_size=48, max_position_embeddings=80, type_vocab_size=8)
@@ -182,9 +182,12 @@ def main5():
     dev_set1 = []
     for i, x in enumerate(data_set):
         for j, typ in enumerate(x[2]):
-            if (typ == 0 or typ == 1) and x[0][j] >= 16:
+            if typ in (0, 1, 2, 3) and x[0][j] >= 16:
                 ids = x[0].copy()
                 ids[j] = 3
+                for k in range(j + 1, len(ids)):
+                    if x[2][k] in (0, 1, 2, 3) and ids[k] >= 16:
+                        ids[k] = 3
                 dev_set0.append([ids, x[1], x[2]])
                 dev_set1.append([j, x[0][j]])
     dev_set = MultiListDataSetV0(dev_set0, dev_set1)
