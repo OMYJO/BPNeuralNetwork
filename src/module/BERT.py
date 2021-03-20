@@ -44,14 +44,14 @@ class BertV0(BertPreTrainedModel):
             module.bias.data.zero_()
 
     def forward(self, input: Dict):
-        input_ids = input["input_ids"] if "input_ids" in input else None
-        attention_mask = input["attention_mask"] if "attention_mask" in input else None
-        token_type_ids = input["token_type_ids"] if "token_type_ids" in input else None
-        position_ids = input["position_ids"] if "position_ids" in input else None
-        head_mask = input["head_mask"] if "head_mask" in input else None
-        inputs_embeds = input["inputs_embeds"] if "inputs_embeds" in input else None
-        encoder_hidden_states = input["encoder_hidden_states"] if "encoder_hidden_states" in input else None
-        encoder_attention_mask = input["encoder_attention_mask"] if "encoder_attention_mask" in input else None
+        input_ids = input.get("input_ids", None)
+        attention_mask = input.get("attention_mask", None)
+        token_type_ids = input.get("token_type_ids", None)
+        position_ids = input.get("position_ids", None)
+        head_mask = input.get("head_mask", None)
+        inputs_embeds = input.get("inputs_embeds", None)
+        encoder_hidden_states = input.get("encoder_hidden_states", None)
+        encoder_attention_mask = input.get("encoder_attention_mask", None)
 
         if input_ids is not None and inputs_embeds is not None:
             raise ValueError("You cannot specify both input_ids and inputs_embeds at the same time")

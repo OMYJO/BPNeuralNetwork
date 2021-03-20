@@ -144,6 +144,60 @@ def deeper():
         torch.save(new_state_dict, f1)
 
 
+def main5():
+    device = "cuda:2" if torch.cuda.is_available() else "cpu"
+    epochs = 500
+    lr = 1e-2
+    warm_up = 20
+    batch_size = 2048
+    bert_config = BertConfig(vocab_size=121, hidden_size=12, num_hidden_layers=1, num_attention_heads=6,
+                             intermediate_size=48, max_position_embeddings=80, type_vocab_size=8)
+    trainer = TrainerV0(BertV0(bert_config), SequencePoolingV0(), MLMPoolingV0(bert_config))
+
+    def filter_(parameters):
+        r = []
+        for k, v in parameters:
+            if any(k.startswith(s) for s in ["0.encoder.layer.1", "2."]):
+                r.append((k, v))
+        return r
+
+    now = datetime.datetime.today()
+    save = os.path.join("..", "models", "version0", now.strftime("%Y%m%d%H%M%S"))
+    os.makedirs(save, exist_ok=True)
+    vocab = os.path.join("..", "models", "version0", "vocab.txt")
+    tokenizer = TokenizerV0(80, vocab, "[CLS]", "[SEP]")
+    data_set = []
+    basic_path = os.path.join("..", "data")
+    for file_name in os.listdir(basic_path):
+        if "json" in file_name:
+            with open(os.path.join(basic_path, file_name), "r", encoding="utf-8") as f:
+                matchs = list(json.load(f))
+                for match in matchs:
+                    data_set += tokenizer.tokenize(match, match[0]["is_overallBP"], True)
+    train_set = ListDataSetV0(data_set)
+    train_loader = dataloader.DataLoader(train_set, batch_size=batch_size, shuffle=True, collate_fn=lambda u: u)
+    dev_set0 = []
+    dev_set1 = []
+    for i, x in enumerate(data_set):
+        for j, typ in enumerate(x[2]):
+            if (typ == 0 or typ == 1) and x[0][j] >= 16:
+                ids = x[0].copy()
+                ids[j] = 3
+                dev_set0.append([ids, x[1], x[2]])
+                dev_set1.append([j, x[0][j]])
+    dev_set = MultiListDataSetV0(dev_set0, dev_set1)
+    dev_loader = dataloader.DataLoader(dev_set, batch_size=batch_size, shuffle=True, collate_fn=lambda u: u)
+    trainer.fit(learn_rate=lr,
+                n_epoch=epochs,
+                train=train_loader,
+                dev=dev_loader,
+                save_path=save,
+                device=device,
+                warm_up=warm_up)
+                # _filter=filter_)
+
+
+
 if __name__ == '__main__':
     # main3()
     main4()

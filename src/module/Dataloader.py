@@ -49,7 +49,7 @@ def data_generate(data_batch, vocab_len=120, device="cpu"):
         old_hero.append(competition[0])
         for hero_id in range(len(competition[0])):
             # for hero_id in range(max_len_q):
-            if any(competition[2][hero_id] == xx for xx in (1, 2, 3, 4)) and (competition[0][hero_id] > 16):
+            if any(competition[2][hero_id] == xx for xx in (0, 1, 2, 3)) and (competition[0][hero_id] >= 16):
                 if random.random() < 0.15:
                     mask.append((i, hero_id, competition[0][hero_id]))
                     hero.append(mask_rule(random.random()))
