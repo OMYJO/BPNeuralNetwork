@@ -7,6 +7,7 @@ from transformers import BertConfig
 from module.BERT import BertV0
 from module.Pooling import SequencePoolingV0, MLMPoolingV0
 from module.Trainer import TrainerV0
+from module.Trainer import TrainerV1
 from module.Tokenizer import TokenizerV0
 from module.Tokenizer import TokenizerV1
 from dataset.DataSet import ListDataSetV0
@@ -146,13 +147,14 @@ def deeper():
 
 def main5():
     device = "cuda:2" if torch.cuda.is_available() else "cpu"
-    epochs = 500
-    lr = 1e-2
+    epochs = 100
+    lr = 1e-3
     warm_up = 20
     batch_size = 2048
-    bert_config = BertConfig(vocab_size=121, hidden_size=12, num_hidden_layers=1, num_attention_heads=6,
-                             intermediate_size=48, max_position_embeddings=80, type_vocab_size=8)
-    trainer = TrainerV0(BertV0(bert_config), SequencePoolingV0(), MLMPoolingV0(bert_config))
+    # bert_config = BertConfig(vocab_size=121, hidden_size=12, num_hidden_layers=1, num_attention_heads=6,
+    #                          intermediate_size=48, max_position_embeddings=80, type_vocab_size=8)
+    # trainer = TrainerV1(BertV0(bert_config), SequencePoolingV0(), MLMPoolingV0(bert_config))
+    trainer = TrainerV1.load("../models/version0/20210320165246", BertV0, SequencePoolingV0, MLMPoolingV0)
 
     def filter_(parameters):
         r = []
@@ -186,7 +188,8 @@ def main5():
                 dev_set0.append([ids, x[1], x[2]])
                 dev_set1.append([j, x[0][j]])
     dev_set = MultiListDataSetV0(dev_set0, dev_set1)
-    dev_loader = dataloader.DataLoader(dev_set, batch_size=batch_size, shuffle=True, collate_fn=lambda u: u)
+    dev_loader = dataloader.DataLoader(dev_set, batch_size=batch_size, shuffle=True,
+                                       collate_fn=lambda u: ([v[0] for v in u], [v[1] for v in u]))
     trainer.fit(learn_rate=lr,
                 n_epoch=epochs,
                 train=train_loader,
@@ -200,5 +203,6 @@ def main5():
 
 if __name__ == '__main__':
     # main3()
-    main4()
+    # main4()
+    main5()
     # deeper()

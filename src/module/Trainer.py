@@ -156,16 +156,16 @@ class TrainerV1(TrainerV0):
                 else:
                     training_loss[-1][0] += 0
                     training_loss[-1][1] += len(mask)
-            training_loss[-1] = training_loss[-1][0] / training_loss[-1][1] if dev_loss[-1][1] else 0
+            training_loss[-1] = training_loss[-1][0] / training_loss[-1][1] if training_loss[-1][1] else 0
             last_loss = training_loss[-1]
             self.eval()
             if dev is not None:
                 dev_loss.append([0, 0])
                 for x, mask in dev:
-                    dev_dic = {"attention_mask": Dataloader.make_attention_mask(x[0], device),
-                               "input_ids": self.fill_and_tensor(x[0], device),
-                               "position_ids": self.fill_and_tensor(x[1], device),
-                               "token_type_ids": self.fill_and_tensor(x[2], device), }
+                    dev_dic = {"attention_mask": Dataloader.make_attention_mask([xx[0] for xx in x], device),
+                               "input_ids": self.fill_and_tensor([xx[0] for xx in x], device),
+                               "position_ids": self.fill_and_tensor([xx[1] for xx in x], device),
+                               "token_type_ids": self.fill_and_tensor([xx[2] for xx in x], device), }
                     y_pre = self(dev_dic)
                     mask = [[i] + m for i, m in enumerate(mask)]
                     loss = self.loss_calculate_wrong(y_pre, mask, loss_function=loss_function, device=device)
@@ -198,17 +198,16 @@ class TrainerV1(TrainerV0):
         else:
             return None
         for i in range(ii, len(mask)):
-            l.append(mask[i][2])
             rr = y_pre[mask[i][0], mask[i][1], :]
-            if int(torch.argmax(rr, dim=0)) == l[-1]:
+            if int(torch.argmax(rr, dim=0)) == mask[i][2]:
                 r = torch.cat((r, rr.unsqueeze(0)), 0)
+                l.append(mask[i][2])
         y_true = torch.tensor(l, device=device)
         return loss_function(r, y_true)
 
     @staticmethod
-    def fill_and_tensor(l:List[List[int]], device, fill = 0):
+    def fill_and_tensor(l: List[List[int]], device, fill=0):
         max_len = max(len(l2) for l2 in l)
-        l1 = [l2.copy()+ [fill] * (max_len-len(l2)) for l2 in l]
-        t = torch.tensor(l1,device=device).long()
+        l1 = [l2.copy() + [fill] * (max_len - len(l2)) for l2 in l]
+        t = torch.tensor(l1, device=device).long()
         return t
-
